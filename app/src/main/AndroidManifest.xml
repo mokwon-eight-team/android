@@ -13,8 +13,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.LoginRegister"
         android:usesCleartextTraffic="true">
-        <activity android:name=".Activity.FindIdActivity"
-            tools:ignore="Instantiatable"></activity>
         <activity android:name=".Activity.FindPassActivity"
             tools:ignore="Instantiatable" />
         <activity android:name=".Activity.UserActivity"

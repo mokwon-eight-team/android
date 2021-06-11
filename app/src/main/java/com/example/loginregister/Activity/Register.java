@@ -125,7 +125,7 @@ public class Register extends AppCompatActivity {
                     jsonob.accumulate("birth", userBirth);
                     jsonob.accumulate("boxpass", userBoxPw);
 
-                    String url = "http://183.107.245.52:8000/contacts";
+                    String url = "http://183.107.245.52:8000/contacts/join";
                     //String url ="http://127.0.0.1:4000/singup";
 
                     new JSONTask().execute(url, jsonob.toString());

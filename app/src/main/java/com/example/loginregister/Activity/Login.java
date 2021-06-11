@@ -4,11 +4,13 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -28,7 +30,8 @@ import java.net.URL;
 public class Login extends AppCompatActivity {
     private EditText et_id, et_pass;
     private Button btn_login, btn_register;
-    private TextView tx_find_id, tx_find_pw;
+    private TextView tx_find_pw;
+    private CheckBox chb_find_id;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +42,7 @@ public class Login extends AppCompatActivity {
         et_pass = findViewById(R.id.et_pass);
         btn_login = findViewById(R.id.btn_login);
         btn_register = findViewById(R.id.btn_register);
-        tx_find_id = findViewById(R.id.tx_find_id);
+        chb_find_id = findViewById(R.id.chb_find_id);
         tx_find_pw = findViewById(R.id.tx_find_pw);
 
 
@@ -52,14 +55,17 @@ public class Login extends AppCompatActivity {
             }
         });
 
-        //아이디 찾기 텍스트 클릭시 수행
-        tx_find_id.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(Login.this, FindIdActivity.class);
-                startActivity(intent);
-            }
-        });
+        //아이디 저장 체크박스 설정
+        //File이란 파일로 저장해둔 값을 가져오기위한 설정
+        SharedPreferences sf = getSharedPreferences("File", MODE_PRIVATE);
+        //text1에 값이 있으면 가져오고 두번째 인자는 없을경우 가져오는 값이다.
+        String text1 = sf.getString("text1", "");
+        if (!(text1.equals("")))
+            chb_find_id.setChecked(true);
+
+        et_id.setText(text1);
+
+
 
         //비밀번호 찾기 텍스트 클릭시 수행
         tx_find_pw.setOnClickListener(new View.OnClickListener() {
@@ -80,7 +86,7 @@ public class Login extends AppCompatActivity {
                     jsonOb.accumulate("et_id", id);
                     jsonOb.accumulate("et_pass", pw);
 
-                    String url = "http://183.107.245.52:8000/contacts/login/:userID";
+                    String url = "http://183.107.245.52:8000/contacts/login";
                     //String url = "http://127.0.0.1:4000/signin";
 
                     new JSONTask().execute(url, jsonOb.toString());
@@ -90,6 +96,30 @@ public class Login extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    public void confirm(View view) {
+    }
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        SharedPreferences sharedPreferences = getSharedPreferences("File",MODE_PRIVATE);
+        //저장을 하기위해 editor를 이용하여 값을 저장시켜준다.
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        //체크 박스에 체크가 됬다면 아이디를 저장한다.
+        if(chb_find_id.isChecked()) {
+            String text1 = et_id.getText().toString();
+            editor.putString("text1", text1);
+        }
+        else
+        {
+            editor.putString("text1", "");
+        }
+
+        // 값을 다 넣었으면 commit으로 완료한다.
+        editor.commit();
     }
 
     public class JSONTask extends AsyncTask<String, String, String> {
