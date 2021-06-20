@@ -30,10 +30,6 @@ public interface RetrofitApi {
     @POST("users/signin")
     Observable<Response<ResponseDTO>> signin(@Body UserInfo body);
 
-    // 회원정보 조회
-//    @GET("users/one/{service_id}")
-//    Observable<Response<ResponseDTO>> getUserInfo(@Path("service_id") String userId);
-
     // 비밀번호 찾기
     @POST("users/loss/secret")
     Observable<Response<ResponseDTO>> getPassword(@Body Map<String, String> body);
