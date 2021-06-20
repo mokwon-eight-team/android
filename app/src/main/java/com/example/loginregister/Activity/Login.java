@@ -60,7 +60,7 @@ public class Login extends AppCompatActivity {
         initComponent();
     }
 
-    // 각종 컴포넌트 및 리스너 선언 및 초기화
+    // 각 컴포넌트 및 리스너 선언
     private void initComponent() {
 
         et_id = findViewById(R.id.et_id);
@@ -139,6 +139,7 @@ public class Login extends AppCompatActivity {
                                 catchException(e, getApplicationContext());
                             }
 
+                            //로그인 성공시 통신
                             @Override
                             public void onComplete() {
                                 Log.d("@@@@@@@@@@@", "startRxSignin onComplete");
@@ -146,7 +147,7 @@ public class Login extends AppCompatActivity {
                         })
         );
     }
-
+    //아이디 저장 체크박스 
     private void saveLoginId(String userId) {
         SharedPreferences sharedPreferences = getSharedPreferences("File", MODE_PRIVATE);
         //저장을 하기위해 editor를 이용하여 값을 저장시켜준다.
@@ -158,7 +159,7 @@ public class Login extends AppCompatActivity {
         editor.apply();
     }
 
-    // Exception 처리
+    // Exception 처리(백엔드와 통신시 오류발생 메세지)
     private void catchException(@NonNull Throwable e, Context context) {
         // HttpException 처리
         if (e instanceof HttpException) {
