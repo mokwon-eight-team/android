@@ -97,6 +97,7 @@ public class Register extends AppCompatActivity {
             public void afterTextChanged(Editable s) { }
         });
 
+        //비밀번호 확인 칸 메세지 변경
         et_pass_ch.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -116,6 +117,7 @@ public class Register extends AppCompatActivity {
             }
         });
 
+        //아이디 중복 버튼 클릭시(아무것도 입력 안할시)
         btn_id_ch = findViewById(R.id.btn_id_ch);
         btn_id_ch.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -232,7 +234,7 @@ public class Register extends AppCompatActivity {
         );
     }
 
-    // Exception 처리
+    // Exception 처리(백엔드와 통신 오류시 메세지 발생)
     private void catchException(@NonNull Throwable e, Context context) {
         // HttpException 처리
         if(e instanceof HttpException) {
