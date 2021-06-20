@@ -10,8 +10,7 @@ public class RetrofitAdapter {
     private static final String BASE_URI_1 = "http://127.0.0.1:8000/";
     private static final String BASE_URI_2 = "http://10.0.0.1:8000/";
     private static final String BASE_URI_3 = "http://10.0.2.2:8000/";
-    private static final String BASE_URI_4 = "http://192.168.0.3:8000/";    // 만약 실제 기기에서 테스트해보고 싶으시다면 cmd 창에서 ipconfig -> wifi 값을 확인해서 대입해준 다음
-                                                                            // 테스트 기기와 express 서버가 실행되는 PC를 같은 wifi에 접속시킨 후 테스트 진행해주시면 됩니다
+    private static final String BASE_URI_4 = "http://192.168.0.3:8000/";    
 
     public RetrofitAdapter() {
     }
