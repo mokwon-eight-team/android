@@ -13,13 +13,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.LoginRegister"
         android:usesCleartextTraffic="true">
-        <activity android:name=".Activity.FindPassActivity"
+        <activity android:name=".Activity.Postcctv"></activity>
+        <activity
+            android:name=".Activity.FindPassActivity"
             tools:ignore="Instantiatable" />
-        <activity android:name=".Activity.UserActivity"
+        <activity
+            android:name=".ActionBar"
             tools:ignore="Instantiatable" />
-        <activity android:name=".ActionBar"
-            tools:ignore="Instantiatable" />
-        <activity android:name=".Activity.Login"
+        <activity
+            android:name=".Activity.Login"
             tools:ignore="Instantiatable">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -27,12 +29,20 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Activity.Register"
+        <activity
+            android:name=".Activity.Register"
             tools:ignore="Instantiatable" />
-        <activity android:name=".Activity.MainActivity"
+        <activity
+            android:name=".Activity.MainActivity"
             tools:ignore="Instantiatable" />
 
-
+        <service
+            android:name=".MyFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

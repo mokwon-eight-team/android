@@ -57,8 +57,8 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         if ( id == R.id.action_btn1){
-            Intent userIntent = new Intent(this, UserActivity.class);
-            startActivity(userIntent);
+            Intent CCTVIntent = new Intent(this, Postcctv.class);
+            startActivity(CCTVIntent);
         }
         return super.onOptionsItemSelected(item);
     }

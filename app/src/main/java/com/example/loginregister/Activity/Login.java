@@ -3,6 +3,7 @@ package com.example.loginregister.Activity;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -13,8 +14,14 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.loginregister.R;
+import com.example.loginregister.retrofit.ResponseDTO;
+import com.example.loginregister.retrofit.RetrofitAdapter;
+import com.example.loginregister.retrofit.RetrofitApi;
+import com.example.loginregister.retrofit.UserInfo;
+import com.google.gson.JsonSyntaxException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -25,7 +32,17 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
+
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.observers.DisposableObserver;
+import io.reactivex.schedulers.Schedulers;
+import retrofit2.HttpException;
+import retrofit2.Response;
 
 public class Login extends AppCompatActivity {
     private EditText et_id, et_pass;
@@ -33,10 +50,18 @@ public class Login extends AppCompatActivity {
     private TextView tx_find_pw;
     private CheckBox chb_find_id;
 
+    private CompositeDisposable compositeDisposable = new CompositeDisposable();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        initComponent();
+    }
+
+    // 각종 컴포넌트 및 리스너 선언 및 초기화
+    private void initComponent() {
 
         et_id = findViewById(R.id.et_id);
         et_pass = findViewById(R.id.et_pass);
@@ -45,145 +70,111 @@ public class Login extends AppCompatActivity {
         chb_find_id = findViewById(R.id.chb_find_id);
         tx_find_pw = findViewById(R.id.tx_find_pw);
 
-
-        // 회원가입 버튼을 클릭 시 수행
-        btn_register.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(Login.this, Register.class);
-                startActivity(intent);
-            }
-        });
-
         //아이디 저장 체크박스 설정
         //File이란 파일로 저장해둔 값을 가져오기위한 설정
         SharedPreferences sf = getSharedPreferences("File", MODE_PRIVATE);
         //text1에 값이 있으면 가져오고 두번째 인자는 없을경우 가져오는 값이다.
         String text1 = sf.getString("text1", "");
-        if (!(text1.equals("")))
+        if (!text1.equals("")) {
+            et_id.setText(text1);
             chb_find_id.setChecked(true);
+        }
 
-        et_id.setText(text1);
-
-
-
-        //비밀번호 찾기 텍스트 클릭시 수행
-        tx_find_pw.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(Login.this, FindPassActivity.class);
-                startActivity(intent);
-            }
+        // 비밀번호 찾기 텍스트 클릭시 수행
+        tx_find_pw.setOnClickListener(view -> {
+            Intent intent = new Intent(Login.this, FindPassActivity.class);
+            startActivity(intent);
         });
+
+        // 회원가입 버튼을 클릭 시 수행
+        btn_register.setOnClickListener(view -> {
+            Intent intent = new Intent(Login.this, Register.class);
+            startActivity(intent);
+        });
+
         //로그인 버튼 클릭시 이벤트 실행
-        btn_login.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                try {
-                    String id = et_id.getText().toString().trim();
-                    String pw = et_pass.getText().toString().trim();
-                    JSONObject jsonOb = new JSONObject();
-                    jsonOb.accumulate("et_id", id);
-                    jsonOb.accumulate("et_pass", pw);
+        btn_login.setOnClickListener(view -> {
+            String uid = et_id.getText().toString();
+            String password = et_pass.getText().toString();
 
-                    String url = "http://183.107.245.52:8000/contacts/login";
-                    //String url = "http://127.0.0.1:4000/signin";
-
-                    new JSONTask().execute(url, jsonOb.toString());
-                    Log.d(jsonOb.toString(), "합니다");
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
+            UserInfo userInfo = new UserInfo(uid, password);
+            startRxSignin(userInfo);
         });
     }
 
-    public void confirm(View view) {
-    }
-    @Override
-    protected void onStop() {
-        super.onStop();
+    // 로그인 통신 함수
+    private void startRxSignin(UserInfo userInfo) {
+        RetrofitApi retrofitApi = RetrofitAdapter.getInstance().getServiceApi();
+        Observable<Response<ResponseDTO>> observable = retrofitApi.signin(userInfo);
 
-        SharedPreferences sharedPreferences = getSharedPreferences("File",MODE_PRIVATE);
+        compositeDisposable.add(observable.subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeWith(new DisposableObserver<Response<ResponseDTO>>() {
+                            @Override
+                            public void onNext(@NonNull Response<ResponseDTO> response) {
+                                int statusCode = response.code();
+
+                                // 로그인 성공
+                                if (statusCode == 200) {
+                                    // 아이디 저장이 체크되어 있으면 저장
+                                    if (chb_find_id.isChecked()) {
+                                        saveLoginId(userInfo.getService_id());
+                                    } else {
+                                        saveLoginId("");
+                                    }
+                                    // 메인 액티비티로 이동
+                                    Intent toMainIntent = new Intent(Login.this, MainActivity.class);
+//                            toMainIntent.putExtra("전달할 키 값", "전달할 값");
+                                    startActivity(toMainIntent);
+                                    finish();
+                                }
+                                // 로그인 실패
+                                else if (statusCode == 404) {
+                                    Toast.makeText(getApplicationContext(), "존재하지 않는 회원정보입니다", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+
+                            @Override
+                            public void onError(@NonNull Throwable e) {
+                                catchException(e, getApplicationContext());
+                            }
+
+                            @Override
+                            public void onComplete() {
+                                Log.d("@@@@@@@@@@@", "startRxSignin onComplete");
+                            }
+                        })
+        );
+    }
+
+    private void saveLoginId(String userId) {
+        SharedPreferences sharedPreferences = getSharedPreferences("File", MODE_PRIVATE);
         //저장을 하기위해 editor를 이용하여 값을 저장시켜준다.
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
-        //체크 박스에 체크가 됬다면 아이디를 저장한다.
-        if(chb_find_id.isChecked()) {
-            String text1 = et_id.getText().toString();
-            editor.putString("text1", text1);
-        }
-        else
-        {
-            editor.putString("text1", "");
-        }
+        editor.putString("text1", userId);
 
         // 값을 다 넣었으면 commit으로 완료한다.
-        editor.commit();
+        editor.apply();
     }
 
-    public class JSONTask extends AsyncTask<String, String, String> {
-        @Override
-        protected String doInBackground(String... urls) {
-            HttpURLConnection nect = null;
-            BufferedReader rea = null;
-            try {
-                URL url = new URL(urls[0]);
-                nect = (HttpURLConnection) url.openConnection();
-                nect.setRequestMethod("POST");
-                nect.setRequestProperty("Cache-Conntrol", "no-cache");
-                nect.setRequestProperty("Content-Type", "application/json");
-
-                nect.setRequestProperty("Accept", "text/html");
-                nect.setDoOutput(true);
-                nect.setDoInput(true);
-                nect.connect();
-
-                OutputStream out = nect.getOutputStream();
-                out.write(urls[1].getBytes("utf-8"));
-                out.flush();
-                out.close();
-
-                InputStream stream = nect.getInputStream();
-                rea = new BufferedReader(new InputStreamReader(stream));
-                StringBuffer buffer = new StringBuffer();
-
-                String line = "";
-                while ((line = rea.readLine()) != null) {
-                    buffer.append(line);
-                }
-                return buffer.toString();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                if (nect != null) {
-                    nect.disconnect();
-                }
-            }
-            try {
-                if (rea != null) {
-                    rea.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return null;
+    // Exception 처리
+    private void catchException(@NonNull Throwable e, Context context) {
+        // HttpException 처리
+        if (e instanceof HttpException) {
+            Toast.makeText(context, "서버 내부에 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show();
         }
-
-        @Override
-        protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-            if (result.equals("Success")) {
-                finish();
-                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                startActivity(intent);
-            } else {
-                AlertDialog.Builder alert = new AlertDialog.Builder(Login.this);
-                alert.setTitle("Temp");
-                alert.setMessage("No user or fail id, password");
-                alert.setPositiveButton("check", null);
-                alert.show();
-            }
+        // 서버와의 통신 지연 처리 (네트워크 속도가 느리거나 서버가 꺼져있을 때 발생합니다)
+        else if (e instanceof SocketTimeoutException) {
+            Toast.makeText(getApplicationContext(), "서버와의 통신이 원활하지 않습니다", Toast.LENGTH_SHORT).show();
+        }
+        // syntax 에러
+        else if (e instanceof IllegalStateException || e instanceof JsonSyntaxException) {
+            Toast.makeText(getApplicationContext(), "프로토콜 파라미터가 일치하지 않습니다", Toast.LENGTH_SHORT).show();
+        }
+        // 기타 서버 에러
+        else {
+            Toast.makeText(getApplicationContext(), "서버 내부에 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", Toast.LENGTH_SHORT).show();
         }
     }
 }

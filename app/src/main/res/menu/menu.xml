@@ -4,7 +4,7 @@
 
 
     <item android:id="@+id/action_btn1"
-        android:title = "마이페이지"
-        android:icon = "@drawable/ic_person_24"
+        android:title = "택배함CCTV"
+        android:icon = "@drawable/ic_action_cctv"
         app:showAsAction="always"/>
 </menu>

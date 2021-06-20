@@ -38,7 +38,6 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="5dp"
-        android:onClick="confirm"
         android:text="로그인"
         android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="@+id/et_pass"
@@ -93,6 +92,5 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/et_id"
         app:layout_constraintTop_toTopOf="@+id/et_id" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>
